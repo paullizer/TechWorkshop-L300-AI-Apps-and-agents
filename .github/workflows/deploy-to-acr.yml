@@ -1,4 +1,4 @@
-name: Deploy to Azure Container Registry
+name: Deploy Customer Loyalty Agent
 
 on:
   push:
