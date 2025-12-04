@@ -21,8 +21,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the code
 COPY . .
 
-# Copy .env file into the image (for python-dotenv)
-COPY .env .env
+# Note: .env file will be created during the Docker build process
+# from GitHub secrets in the CI/CD pipeline
 
 # Expose the port (default FastAPI/uvicorn port)
 EXPOSE 8000

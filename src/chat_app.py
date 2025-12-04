@@ -11,14 +11,14 @@ import orjson  # Faster JSON library
 from dotenv import load_dotenv
 from opentelemetry import trace
 import logging
-# from opentelemetry.instrumentation.openai_v2 import OpenAIInstrumentor
+from opentelemetry.instrumentation.openai_v2 import OpenAIInstrumentor
 
 # Azure & OpenAI Imports
 from azure.ai.projects import AIProjectClient
 from azure.identity import DefaultAzureCredential
 from openai import AzureOpenAI
-# from azure.monitor.opentelemetry import configure_azure_monitor
-# from azure.ai.agents.telemetry import trace_function
+from azure.monitor.opentelemetry import configure_azure_monitor
+from azure.ai.agents.telemetry import trace_function
 
 # FastAPI Imports
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
@@ -42,7 +42,7 @@ from utils.message_utils import (
 # Agent Imports
 from app.tools.understandImage import get_image_description
 from services.agent_service import get_or_create_agent_processor
-# from app.tools.singleAgentExample import generate_response
+from app.tools.singleAgentExample import generate_response
 # from app.tools.aiSearchTools import product_recommendations
 # from app.tools.imageCreationTool import create_image
 # from app.servers.mcp_inventory_server import mcp as inventory_mcp
@@ -63,9 +63,9 @@ logger = logging.getLogger(__name__)
 # Global thread pool executor for CPU-bound operations
 thread_pool = ThreadPoolExecutor(max_workers=4)
 
-# application_insights_connection_string = os.environ["APPLICATIONINSIGHTS_CONNECTION_STRING"]
-# configure_azure_monitor(connection_string=application_insights_connection_string)
-# OpenAIInstrumentor().instrument()
+application_insights_connection_string = os.environ["APPLICATIONINSIGHTS_CONNECTION_STRING"]
+configure_azure_monitor(connection_string=application_insights_connection_string)
+OpenAIInstrumentor().instrument()
 
 scenario = os.path.basename(__file__)
 tracer = trace.get_tracer(__name__)
@@ -245,15 +245,15 @@ async def websocket_endpoint(websocket: WebSocket):
             
             chat_history = parse_conversation_history(conversation_history, chat_history, user_message)
             
-            await websocket.send_text(fast_json_dumps({"answer": "This application is not yet ready to serve results. Please check back later.", "agent": None, "cart": persistent_cart}))
+            # await websocket.send_text(fast_json_dumps({"answer": "This application is not yet ready to serve results. Please check back later.", "agent": None, "cart": persistent_cart}))
 
-            # # Single-agent example
-            # try:
-            #     response = generate_response(user_message)
-            #     await websocket.send_text(fast_json_dumps({"answer": response, "agent": "single", "cart": persistent_cart}))
-            # except Exception as e:
-            #     logger.error("Error during single-agent response generation", exc_info=True)
-            #     await websocket.send_text(fast_json_dumps({"answer": "Error during single-agent response generation", "error": str(e), "cart": persistent_cart}))
+            # Single-agent example
+            try:
+                response = generate_response(user_message)
+                await websocket.send_text(fast_json_dumps({"answer": response, "agent": "single", "cart": persistent_cart}))
+            except Exception as e:
+                logger.error("Error during single-agent response generation", exc_info=True)
+                await websocket.send_text(fast_json_dumps({"answer": "Error during single-agent response generation", "error": str(e), "cart": persistent_cart}))
 
             # # Multi-agent example with MCP inventory server and handoff service
             # # Run customer loyalty task only once when session starts
